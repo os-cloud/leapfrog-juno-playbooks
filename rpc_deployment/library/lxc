@@ -861,10 +861,6 @@ class LxcManagement(object):
             )
 
         kernel_version = self._get_kernel_version()
-        if kernel_version[0] < 3:
-            kernel_fail()
-        elif kernel_version[1] < 6:
-            kernel_fail()
 
         build_command = [
             self.module.get_bin_path('lxc-attach', True),
