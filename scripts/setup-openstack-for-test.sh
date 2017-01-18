@@ -62,6 +62,7 @@ neutron net-create PRIVATE_NET \
     --provider:segmentation_id 101
 
 neutron subnet-create PRIVATE_NET 192.168.0.0/24 \
+    --enable-dhcp \
     --name PRIVATE_NET_SUBNET
 
 # Neutron router setup
@@ -103,11 +104,38 @@ done
 
 # Create some default images
 wget http://uec-images.ubuntu.com/releases/14.04/release/ubuntu-14.04-server-cloudimg-amd64-disk1.img
-glance image-create --name 'Ubuntu 14.04 LTS' \
+glance image-create --name 'Ubuntu14.04-Test-LEAP' \
                     --container-format bare \
                     --disk-format qcow2 \
                     --is-public=True \
                     --progress \
                     --file ubuntu-14.04-server-cloudimg-amd64-disk1.img
 rm ubuntu-14.04-server-cloudimg-amd64-disk1.img
+
+TEST_IMAGE="$(glance image-list | awk '/Ubuntu14.04-Test-LEAP/ {print $2}')"
+L2_NET="$(neutron net-list | awk '/GATEWAY_NET/ {print $2}')"
+
+nova boot --image "${TEST_IMAGE}" \
+          --flavor "m1.mini" \
+          --nic "net-id=${L2_NET}" \
+          --max-count 3 \
+          "TEST-Cinder-LVM"
+
+nova boot --image "${TEST_IMAGE}" \
+          --flavor "m1.mini" \
+          --nic "net-id=${L2_NET}" \
+          --max-count 3 \
+          "TEST-L2-Networks"
+
+nova boot --image "${TEST_IMAGE}" \
+          --flavor "m1.mini" \
+          --nic "net-id=$(neutron net-list | awk '/PRIVATE_NET/ {print $2}')" \
+          --max-count 3 \
+          "TEST-L3-Networks"
+
+for instance in $(nova list | awk '/TEST-L3-Networks/ {print $2}'); do
+  FLOATING_IP_ID="$(neutron floatingip-create ${L2_NET} | grep -w "id" | awk '{print $4}')"
+  PORT_ID="$(neutron port-list --device_id=${instance} | awk '/ip_address/ {print $2}')"
+  neutron floatingip-associate "${FLOATING_IP_ID}" "${PORT_ID}"
+done
 
