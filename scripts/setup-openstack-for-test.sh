@@ -139,3 +139,17 @@ for instance in $(nova list | awk '/TEST-L3-Networks/ {print $2}'); do
   neutron floatingip-associate "${FLOATING_IP_ID}" "${PORT_ID}"
 done
 
+nova boot --image "${TEST_IMAGE}" \
+          --flavor "m1.mini" \
+          --nic "net-id=${L2_NET}" \
+          --max-count 3 \
+          "TEST-Cinder-LVM"
+
+for instance in $(nova list | awk '/TEST-Cinder-LVM/ {print $2}'); do
+  while [[ $(nova show ${instance} | grep -w vm_state | awk '{print $4}') != "active" ]]; do
+    sleep 4
+  done
+  CINDER_ID="$(cinder create --display-name "${instance}" 2 | grep -w id | awk '{print $4}')"
+  nova volume-attach "${instance}" "${CINDER_ID}" /dev/sdb1
+done
+
