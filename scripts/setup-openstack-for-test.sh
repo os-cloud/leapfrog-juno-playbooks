@@ -118,20 +118,20 @@ L2_NET="$(neutron net-list | awk '/GATEWAY_NET/ {print $2}')"
 nova boot --image "${TEST_IMAGE}" \
           --flavor "m1.mini" \
           --nic "net-id=${L2_NET}" \
-          --max-count 3 \
-          "TEST-Cinder-LVM"
-
-nova boot --image "${TEST_IMAGE}" \
-          --flavor "m1.mini" \
-          --nic "net-id=${L2_NET}" \
-          --max-count 3 \
+          --max-count 2 \
           "TEST-L2-Networks"
 
 nova boot --image "${TEST_IMAGE}" \
           --flavor "m1.mini" \
           --nic "net-id=$(neutron net-list | awk '/PRIVATE_NET/ {print $2}')" \
-          --max-count 3 \
+          --max-count 2 \
           "TEST-L3-Networks"
+
+nova boot --image "${TEST_IMAGE}" \
+          --flavor "m1.mini" \
+          --nic "net-id=${L2_NET}" \
+          --max-count 2 \
+          "TEST-Cinder-LVM"
 
 for instance in $(nova list | awk '/TEST-L3-Networks/ {print $2}'); do
   FLOATING_IP_ID="$(neutron floatingip-create ${L2_NET} | grep -w "id" | awk '{print $4}')"
@@ -139,17 +139,16 @@ for instance in $(nova list | awk '/TEST-L3-Networks/ {print $2}'); do
   neutron floatingip-associate "${FLOATING_IP_ID}" "${PORT_ID}"
 done
 
-nova boot --image "${TEST_IMAGE}" \
-          --flavor "m1.mini" \
-          --nic "net-id=${L2_NET}" \
-          --max-count 3 \
-          "TEST-Cinder-LVM"
-
 for instance in $(nova list | awk '/TEST-Cinder-LVM/ {print $2}'); do
+  CINDER_ID="$(cinder create --display-name "${instance}" 2 | grep -w id | awk '{print $4}')"
+  while [[ $(cinder show ${CINDER_ID} | grep -w "status" | grep -v "os-vol" | awk '{print $4}') != "available" ]]; do
+    sleep 4
+  done
   while [[ $(nova show ${instance} | grep -w vm_state | awk '{print $4}') != "active" ]]; do
     sleep 4
   done
-  CINDER_ID="$(cinder create --display-name "${instance}" 2 | grep -w id | awk '{print $4}')"
   nova volume-attach "${instance}" "${CINDER_ID}" /dev/sdb1
 done
+
+swift upload Test-Swift "${HOME}"
 
