@@ -49,6 +49,11 @@ if [ -d "${ANSIBLE_WORKING_DIR}" ];then
     rm -rf "${ANSIBLE_WORKING_DIR}"
 fi
 
+#make a directory if the directory doesn't exist
+[ -d /openstack/log/ansible-logging ] || mkdir -p /openstack/log/ansible-logging
+#create the file for deploying juno
+touch /openstack/log/ansible-logging/ansible.log
+
 # Clone down the base ansible source
 git clone "${ANSIBLE_GIT_REPO}" "${ANSIBLE_WORKING_DIR}"
 pushd "${ANSIBLE_WORKING_DIR}"
