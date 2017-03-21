@@ -27,7 +27,7 @@ export DEPLOY_TEMPEST=${DEPLOY_TEMPEST:-"yes"}
 export RUN_PLAYBOOKS=${RUN_PLAYBOOKS:-"yes"}
 export RUN_TEMPEST=${RUN_TEMPEST:-"yes"}
 # Ansible options
-export ANSIBLE_PARAMETERS=${ANSIBLE_PARAMETERS:-"-v"}
+export ANSIBLE_PARAMETERS=${ANSIBLE_PARAMETERS:-"-vvvvv"}
 # limit Ansible forks for gate check
 export FORKS=${FORKS:-10}
 # tempest and testr options, default is to run tempest in serial
