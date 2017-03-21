@@ -25,7 +25,6 @@ export SYMLINK_DIR=${SYMLINK_DIR:-"$(pwd)/logs"}
 # Ubuntu repos
 UBUNTU_RELEASE=$(lsb_release -sc)
 UBUNTU_REPO=${UBUNTU_REPO:-"http://mirror.rackspace.com/ubuntu"}
-UBUNTU_SEC_REPO=${UBUNTU_SEC_REPO:-"http://mirror.rackspace.com/ubuntu"}
 
 
 ## Functions -----------------------------------------------------------------
@@ -174,18 +173,7 @@ fi
 # Set the host repositories to only use the same ones, always, for the sake of consistency.
 cat > /etc/apt/sources.list <<EOF
 # Normal repositories
-deb ${UBUNTU_REPO} ${UBUNTU_RELEASE} main restricted
-deb ${UBUNTU_REPO} ${UBUNTU_RELEASE}-updates main restricted
-deb ${UBUNTU_REPO} ${UBUNTU_RELEASE} universe
-deb ${UBUNTU_REPO} ${UBUNTU_RELEASE}-updates universe
-deb ${UBUNTU_REPO} ${UBUNTU_RELEASE} multiverse
-deb ${UBUNTU_REPO} ${UBUNTU_RELEASE}-updates multiverse
-# Backports repositories
-deb ${UBUNTU_REPO} ${UBUNTU_RELEASE}-backports main restricted universe multiverse
-# Security repositories
-deb ${UBUNTU_SEC_REPO} ${UBUNTU_RELEASE}-security main restricted
-deb ${UBUNTU_SEC_REPO} ${UBUNTU_RELEASE}-security universe
-deb ${UBUNTU_SEC_REPO} ${UBUNTU_RELEASE}-security multiverse
+deb ${UBUNTU_REPO} ${UBUNTU_RELEASE} main universe
 EOF
 
 # Bring up the new interfaces
