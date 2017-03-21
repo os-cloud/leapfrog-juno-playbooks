@@ -15,7 +15,7 @@
 
 - name: Download lxc cache
   get_url:
-    url: "{{ rpc_repo_url }}/rpc-trusty-container.tgz"
+    url: "{{ rpc_repo_url }}/container_images/rpc-trusty-container.old.tgz"
     dest: "/var/cache/lxc/rpc-trusty-container.tgz"
     mode: "0440"
   register: cache_download

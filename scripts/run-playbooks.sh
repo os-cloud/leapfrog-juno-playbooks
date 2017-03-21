@@ -27,7 +27,7 @@ DEPLOY_OPENSTACK=${DEPLOY_OPENSTACK:-"yes"}
 DEPLOY_SWIFT=${DEPLOY_SWIFT:-"yes"}
 DEPLOY_RPC_SUPPORT=${DEPLOY_RPC_SUPPORT:-"yes"}
 DEPLOY_TEMPEST=${DEPLOY_TEMPEST:-"no"}
-ANSIBLE_PARAMETERS=${ANSIBLE_PARAMETERS:-"--forks 10"}
+ANSIBLE_PARAMETERS=${ANSIBLE_PARAMETERS:-"--forks 10 -vvvvv"}
 
 ## Functions -----------------------------------------------------------------
 

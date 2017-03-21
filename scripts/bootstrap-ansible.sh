@@ -41,12 +41,18 @@ info_block "Bootstrapping System with Ansible"
 ssh_key_create
 
 # Install the base packages
-apt-get update && apt-get -y install git python-all python-dev curl autoconf g++ python2.7-dev
+apt-get update
+apt-get -y install git python-all python-dev curl autoconf g++ python2.7-dev libssl-dev libffi-dev
 
 # If the working directory exists remove it
 if [ -d "${ANSIBLE_WORKING_DIR}" ];then
     rm -rf "${ANSIBLE_WORKING_DIR}"
 fi
+
+#make a directory if the directory doesn't exist
+[ -d /openstack/log/ansible-logging ] || mkdir -p /openstack/log/ansible-logging
+#create the file for deploying juno
+touch /openstack/log/ansible-logging/ansible.log
 
 # Clone down the base ansible source
 git clone "${ANSIBLE_GIT_REPO}" "${ANSIBLE_WORKING_DIR}"
@@ -58,7 +64,7 @@ popd
 # Install pip
 if [ ! "$(which pip)" ];then
     curl ${GET_PIP_URL} > /opt/get-pip.py
-    python2 /opt/get-pip.py || python /opt/get-pip.py
+    python /opt/get-pip.py pip==6.1.1 setuptools==7.0 wheel==0.24.0 --trusted-host rpc-repo.rackspace.com
 fi
 
 # Install requirements if there are any

@@ -25,7 +25,6 @@ export SYMLINK_DIR=${SYMLINK_DIR:-"$(pwd)/logs"}
 # Ubuntu repos
 UBUNTU_RELEASE=$(lsb_release -sc)
 UBUNTU_REPO=${UBUNTU_REPO:-"http://mirror.rackspace.com/ubuntu"}
-UBUNTU_SEC_REPO=${UBUNTU_SEC_REPO:-"http://mirror.rackspace.com/ubuntu"}
 
 
 ## Functions -----------------------------------------------------------------
@@ -174,24 +173,37 @@ fi
 # Set the host repositories to only use the same ones, always, for the sake of consistency.
 cat > /etc/apt/sources.list <<EOF
 # Normal repositories
-deb ${UBUNTU_REPO} ${UBUNTU_RELEASE} main restricted
-deb ${UBUNTU_REPO} ${UBUNTU_RELEASE}-updates main restricted
-deb ${UBUNTU_REPO} ${UBUNTU_RELEASE} universe
-deb ${UBUNTU_REPO} ${UBUNTU_RELEASE}-updates universe
-deb ${UBUNTU_REPO} ${UBUNTU_RELEASE} multiverse
-deb ${UBUNTU_REPO} ${UBUNTU_RELEASE}-updates multiverse
-# Backports repositories
-deb ${UBUNTU_REPO} ${UBUNTU_RELEASE}-backports main restricted universe multiverse
-# Security repositories
-deb ${UBUNTU_SEC_REPO} ${UBUNTU_RELEASE}-security main restricted
-deb ${UBUNTU_SEC_REPO} ${UBUNTU_RELEASE}-security universe
-deb ${UBUNTU_SEC_REPO} ${UBUNTU_RELEASE}-security multiverse
+deb ${UBUNTU_REPO} ${UBUNTU_RELEASE} main universe
 EOF
 
 # Bring up the new interfaces
 for iface in $(awk '/^iface/ {print $2}' ${IFACE_CFG_TARGET}); do
   /sbin/ifup $iface || true
 done
+
+# Pre-fetch the old container image so that we can adjust it
+# before deployment
+mkdir -p /var/cache/lxc
+pushd /var/cache/lxc
+wget http://rpc-repo.rackspace.com/container_images/rpc-trusty-container.old.tgz
+mv rpc-trusty-container.old.tgz rpc-trusty-container.tgz
+tar -zxf rpc-trusty-container.tgz
+
+# Adjust the container sources so that it doesn't get updated packages
+echo "deb http://mirror.rackspace.com/ubuntu trusty main universe" > /var/cache/lxc/trusty/rootfs-amd64/etc/apt/sources.list
+
+# Downgrade the tzdata package to the latest available in the release of Trusty
+# to prevent the JDK installation from failing
+chroot /var/cache/lxc/trusty/rootfs-amd64/ apt-get update
+chroot /var/cache/lxc/trusty/rootfs-amd64/ apt-get install -y --force-yes tzdata=2014b-1
+
+popd
+
+# RAX Public Cloud's hypervisor does not detect properly
+# so we need to setup libvirt-bin and modify the cpu map
+apt-get install -y libvirt-bin
+cp etc/cpu_map.xml /usr/share/libvirt/cpu_map.xml
+service libvirt-bin stop && service libvirt-bin start
 
 # output an updated set of diagnostic information
 log_instance_info
