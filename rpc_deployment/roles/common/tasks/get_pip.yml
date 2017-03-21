@@ -63,7 +63,7 @@
   changed_when: false
 
 - name: Install PIP
-  shell: "python /opt/get-pip.py"
+  shell: "python /opt/get-pip.py pip==6.1.1 setuptools==7.0 wheel==0.24.0 --trusted-host rpc-repo.rackspace.com"
   changed_when: false
   register: pip_install
   until: pip_install|success

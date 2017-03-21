@@ -71,7 +71,7 @@ gpg_keys:
 apt_common_repos:
   - { repo: "deb {{ mariadb_repo_url }} {{ ansible_distribution_release }} main", state: "present" }
 
-get_pip_url: "{{ rpc_repo_url }}/downloads/get-pip.py"
+get_pip_url: "https://bootstrap.pypa.io/get-pip.py"
 
 apt_pinned_packages:
   - { package: "lxc", version: "1.0.7-0ubuntu0.1" }
