@@ -184,7 +184,7 @@ done
 # Pre-fetch the old container image so that we can adjust it
 # before deployment
 mkdir -p /var/cache/lxc
-cd /var/cache/lxc
+pushd /var/cache/lxc
 wget http://rpc-repo.rackspace.com/container_images/rpc-trusty-container.old.tgz
 mv rpc-trusty-container.old.tgz rpc-trusty-container.tgz
 tar -zxf rpc-trusty-container.tgz
@@ -196,6 +196,14 @@ echo "deb http://mirror.rackspace.com/ubuntu trusty main universe" > /var/cache/
 # to prevent the JDK installation from failing
 chroot /var/cache/lxc/trusty/rootfs-amd64/ apt-get update
 chroot /var/cache/lxc/trusty/rootfs-amd64/ apt-get install -y --force-yes tzdata=2014b-1
+
+popd
+
+# RAX Public Cloud's hypervisor does not detect properly
+# so we need to setup libvirt-bin and modify the cpu map
+apt-get install -y libvirt-bin
+cp etc/cpu_map.xml /usr/share/libvirt/cpu_map.xml
+service libvirt-bin stop && service libvirt-bin start
 
 # output an updated set of diagnostic information
 log_instance_info
