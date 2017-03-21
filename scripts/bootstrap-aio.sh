@@ -193,6 +193,22 @@ for iface in $(awk '/^iface/ {print $2}' ${IFACE_CFG_TARGET}); do
   /sbin/ifup $iface || true
 done
 
+# Pre-fetch the old container image so that we can adjust it
+# before deployment
+mkdir -p /var/cache/lxc
+cd /var/cache/lxc
+wget http://rpc-repo.rackspace.com/container_images/rpc-trusty-container.old.tgz
+mv rpc-trusty-container.old.tgz rpc-trusty-container.tgz
+tar -zxf rpc-trusty-container.tgz
+
+# Adjust the container sources so that it doesn't get updated packages
+echo "deb http://mirror.rackspace.com/ubuntu trusty main universe" > /var/cache/lxc/trusty/rootfs-amd64/etc/apt/sources.list
+
+# Downgrade the tzdata package to the latest available in the release of Trusty
+# to prevent the JDK installation from failing
+chroot /var/cache/lxc/trusty/rootfs-amd64/ apt-get update
+chroot /var/cache/lxc/trusty/rootfs-amd64/ apt-get install -y --force-yes tzdata=2014b-1
+
 # output an updated set of diagnostic information
 log_instance_info
 
